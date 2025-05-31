@@ -4,19 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Podium Mario Kart – Leclerc Marmoutier x Animeico</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
       margin: 0;
       font-family: 'Arial Rounded MT Bold', sans-serif;
-      background-color: #203451; /* Bleu roi */
-      color: #FFFFFF; /* Blanc */
+      background-color: #203451;
+      color: #FFFFFF;
       text-shadow: 1px 1px 3px #000;
     }
     header {
       background: #203451;
       padding: 1rem;
       text-align: center;
-      border-bottom: 5px solid #FBB900; /* Jaune */
+      border-bottom: 5px solid #FBB900;
     }
     header h1 {
       font-size: 2.8rem;
@@ -27,7 +28,7 @@
       text-align: center;
       margin-top: 1rem;
       font-size: 1.2rem;
-      color: #36A9E0; /* Bleu ciel */
+      color: #36A9E0;
     }
     .podium {
       display: flex;
@@ -38,7 +39,7 @@
     }
     .console {
       background-color: rgba(255,255,255,0.05);
-      border: 2px solid #575756; /* Gris */
+      border: 2px solid #575756;
       padding: 1rem 2rem;
       border-radius: 15px;
       width: 300px;
@@ -46,7 +47,7 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
     }
     .console h2 {
-      color: #51AE32; /* Vert */
+      color: #51AE32;
       font-size: 1.4rem;
       margin-bottom: 1rem;
     }
@@ -57,7 +58,7 @@
     li {
       font-size: 1.2rem;
       margin: 0.5rem 0;
-      color: #D40074; /* Rose */
+      color: #D40074;
     }
     footer {
       text-align: center;
@@ -81,18 +82,17 @@
     async function fetchData() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRU6XGT0W_GLOkrww4p6qalRKSS6fi2c4BKgoT7IUUdhzApBjlQopI2b4PfrLsIY2E9Sogu5WDZDlAN/pub?output=csv";
       const response = await fetch(url);
-      const data = await response.text();
-      const rows = data.split("\n").map(r => r.split(","));
-      const headers = rows[0].map(h => h.trim().replaceAll('\"', '').replaceAll('\r', '').replaceAll('\n', ''));
+      const csvData = await response.text();
 
-      const idxPseudo = headers.findIndex(h => h.toLowerCase().includes("pseudo"));
-      const idxConsole = headers.findIndex(h => h.toLowerCase().includes("console"));
-      const idxTemps = headers.findIndex(h => h.toLowerCase().includes("temps"));
+      const parsed = Papa.parse(csvData, {
+        header: true,
+        skipEmptyLines: true
+      });
 
-      const results = rows.slice(1).map(row => ({
-        pseudo: row[idxPseudo]?.trim(),
-        console: row[idxConsole]?.trim(),
-        temps: row[idxTemps]?.trim()
+      const results = parsed.data.map(row => ({
+        pseudo: row["Pseudo"]?.trim(),
+        console: row["Console"]?.trim(),
+        temps: row["Temps"]?.trim()
       })).filter(e => e.pseudo && e.console && e.temps);
 
       document.getElementById("counter").textContent = `🎮 Nombre de participations : ${results.length}`;
