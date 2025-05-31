@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Podium Mario Kart – Leclerc Marmoutier x Animeico</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial Rounded MT Bold', sans-serif;
+      background-color: #203451; /* Bleu roi */
+      color: #FFFFFF; /* Blanc */
+      text-shadow: 1px 1px 3px #000;
+    }
+    header {
+      background: #203451;
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 5px solid #FBB900; /* Jaune */
+    }
+    header h1 {
+      font-size: 2.8rem;
+      margin: 0;
+      color: #FBB900;
+    }
+    .counter {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #36A9E0; /* Bleu ciel */
+    }
+    .podium {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem;
+    }
+    .console {
+      background-color: rgba(255,255,255,0.05);
+      border: 2px solid #575756; /* Gris */
+      padding: 1rem 2rem;
+      border-radius: 15px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+    .console h2 {
+      color: #51AE32; /* Vert */
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+    ol {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+      color: #D40074; /* Rose */
+    }
+    footer {
+      text-align: center;
+      margin: 2rem;
+      font-size: 0.9rem;
+      color: #575756;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏎️ Podium Mario Kart - Leclerc Marmoutier x Animeico</h1>
+  </header>
+  <div class="counter" id="counter">Chargement des participations...</div>
+  <section class="podium" id="podium">Chargement des scores...</section>
+  <footer>
+    &copy; 2025 Animeico - Données en temps réel depuis Google Sheets
+  </footer>
+
+  <script>
+    async function fetchData() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRU6XGT0W_GLOkrww4p6qalRKSS6fi2c4BKgoT7IUUdhzApBjlQopI2b4PfrLsIY2E9Sogu5WDZDlAN/pub?output=csv";
+      const response = await fetch(url);
+      const data = await response.text();
+      const rows = data.split("\n").map(r => r.split(","));
+      const headers = rows[0];
+      const idxPseudo = headers.indexOf("Pseudo");
+      const idxConsole = headers.indexOf("Console");
+      const idxTemps = headers.indexOf("Temps");
+
+      const results = rows.slice(1).map(row => ({
+        pseudo: row[idxPseudo],
+        console: row[idxConsole],
+        temps: row[idxTemps]
+      })).filter(e => e.pseudo && e.console && e.temps);
+
+      document.getElementById("counter").textContent = `🎮 Nombre de participations : ${results.length}`;
+
+      const consoles = [...new Set(results.map(e => e.console))];
+      const html = consoles.map(console => {
+        const pod = results
+          .filter(e => e.console === console)
+          .sort((a, b) => {
+            const [ma, sa, msa] = a.temps.split(":".padEnd(3, "0")).map(Number);
+            const [mb, sb, msb] = b.temps.split(":".padEnd(3, "0")).map(Number);
+            return (ma*60000 + sa*1000 + msa) - (mb*60000 + sb*1000 + msb);
+          })
+          .slice(0, 3)
+          .map((e, i) => {
+            const emojis = ["🥇", "🥈", "🥉"];
+            return `<li>${emojis[i] || ""} ${e.pseudo} - ${e.temps}</li>`;
+          }).join("");
+
+        return `<div class="console"><h2>${console}</h2><ol>${pod || '<li>Aucun score</li>'}</ol></div>`;
+      }).join("");
+
+      document.getElementById("podium").innerHTML = html;
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
